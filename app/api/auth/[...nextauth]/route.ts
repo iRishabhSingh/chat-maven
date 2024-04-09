@@ -6,7 +6,7 @@ import connect from "@/utils/database";
 import User from "@/models/User";
 
 // Define authentication options
-export const authOptions: AuthOptions = {
+const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       id: "credentials",
@@ -54,7 +54,7 @@ export const authOptions: AuthOptions = {
 };
 
 // Export authentication handler
-export const handler = NextAuth(authOptions);
+const handler = NextAuth(authOptions);
 
 // Expose handler for both GET and POST requests
 export { handler as GET, handler as POST };
