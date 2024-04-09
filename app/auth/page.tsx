@@ -1,6 +1,5 @@
 "use client";
-import React, { useState, ChangeEvent, FormEvent } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -14,6 +13,9 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
+import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface LoginData {
   email: string;
@@ -21,9 +23,30 @@ interface LoginData {
 }
 
 interface SignupData {
+  name: string;
   email: string;
   password: string;
 }
+
+const TogglePasswordVisibility: React.FC<{
+  isVisible: boolean;
+  onToggle: () => void;
+}> = ({ isVisible, onToggle }) => {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="absolute cursor-pointer select-none inset-y-0 right-4 flex items-center justify-center"
+      aria-label={isVisible ? "Hide password" : "Show password"}
+    >
+      {isVisible ? (
+        <EyeOff width={15} height={15} />
+      ) : (
+        <Eye width={15} height={15} />
+      )}
+    </button>
+  );
+};
 
 const AuthPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
@@ -32,11 +55,21 @@ const AuthPage: React.FC = () => {
     password: "",
   });
   const [signupData, setSignupData] = useState<SignupData>({
+    name: "",
     email: "",
     password: "",
   });
+  const [isLoginPasswordVisible, setIsLoginPasswordVisible] = useState(false);
+  const [isSignupPasswordVisible, setIsSignupPasswordVisible] = useState(false);
 
   const router = useRouter();
+  const session = useSession();
+
+  useEffect(() => {
+    if (session?.status === "authenticated") {
+      router.replace("/");
+    }
+  }, [session, router]);
 
   const handleLoginSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,25 +78,89 @@ const AuthPage: React.FC = () => {
       return;
     }
     if (!loginData.password || !isStrongPassword(loginData.password)) {
-      toast(
-        "Password should be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, one numeric digit, and one special character."
-      );
+      toast("Password is incorrect.");
       return;
     }
-    console.log("Logging in with:", loginData);
+
+    try {
+      const response = await signIn("credentials", {
+        redirect: false,
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      if (response?.error) {
+        toast("Invalid credentials" + response?.error);
+
+        if (response?.url) {
+          router.replace("/");
+        }
+      }
+
+      if (response?.ok) {
+        toast("Logged in successfully. 🎉");
+        router.replace("/");
+      }
+    } catch (error: any) {
+      toast("An error occurred. Please try again later.");
+    }
   };
 
-  const handleSignupSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSignupSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!signupData.name) {
+      toast("Please enter your name.");
+      return;
+    }
     if (!signupData.email || !isValidEmail(signupData.email)) {
       toast("Please enter a valid email.");
       return;
     }
     if (!signupData.password || !isStrongPassword(signupData.password)) {
-      toast("Incorrect password. Please enter a valid password.");
+      toast(
+        "Password should be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, one numeric digit, and one special character."
+      );
       return;
     }
-    console.log("Signing up with:", signupData);
+
+    try {
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: signupData.name,
+          email: signupData.email,
+          password: signupData.password,
+        }),
+      });
+
+      if (response.status === 400) {
+        toast("Email already exists");
+        return;
+      }
+
+      if (response.status === 200) {
+        toast("Account created successfully. 🎉");
+
+        // Sign in the user after account creation
+        const signInResponse = await signIn("credentials", {
+          redirect: false,
+          email: signupData.email,
+          password: signupData.password,
+        });
+
+        if (signInResponse?.error) {
+          toast("Unable to signin, try again!");
+
+          if (signInResponse?.url) router.replace("/");
+        }
+        return;
+      }
+    } catch (error: any) {
+      toast("An error occurred. Please try again.");
+    }
   };
 
   const handleInputChange = (
@@ -75,6 +172,14 @@ const AuthPage: React.FC = () => {
       setLoginData((prevData) => ({ ...prevData, [name]: value }));
     } else {
       setSignupData((prevData) => ({ ...prevData, [name]: value }));
+    }
+  };
+
+  const togglePasswordVisibility = (type: "login" | "signup") => {
+    if (type === "login") {
+      setIsLoginPasswordVisible((prev) => !prev);
+    } else {
+      setIsSignupPasswordVisible((prev) => !prev);
     }
   };
 
@@ -112,7 +217,7 @@ const AuthPage: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="space-y-1">
+                <div className="space-y-1 relative">
                   <Label htmlFor="login-email">Email</Label>
                   <Input
                     id="login-email"
@@ -124,13 +229,20 @@ const AuthPage: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="login-password">Password</Label>
-                  <Input
-                    id="login-password"
-                    name="password"
-                    type="password"
-                    value={loginData.password}
-                    onChange={(e) => handleInputChange(e, "login")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="login-password"
+                      name="password"
+                      className="pr-12"
+                      type={isLoginPasswordVisible ? "text" : "password"}
+                      value={loginData.password}
+                      onChange={(e) => handleInputChange(e, "login")}
+                    />
+                    <TogglePasswordVisibility
+                      isVisible={isLoginPasswordVisible}
+                      onToggle={() => togglePasswordVisibility("login")}
+                    />
+                  </div>
                 </div>
               </CardContent>
               <CardFooter className="flex justify-center">
@@ -147,7 +259,17 @@ const AuthPage: React.FC = () => {
                 <CardDescription>Create a new account.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="space-y-1">
+                <div className="space-y-1 relative">
+                  <Label htmlFor="signup-name">Name</Label>
+                  <Input
+                    id="signup-name"
+                    name="name"
+                    type="text"
+                    value={signupData.name}
+                    onChange={(e) => handleInputChange(e, "signup")}
+                  />
+                </div>
+                <div className="space-y-1 relative">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
                     id="signup-email"
@@ -159,13 +281,20 @@ const AuthPage: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="signup-password">Password</Label>
-                  <Input
-                    id="signup-password"
-                    name="password"
-                    type="password"
-                    value={signupData.password}
-                    onChange={(e) => handleInputChange(e, "signup")}
-                  />
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      name="password"
+                      className="pr-12"
+                      type={isSignupPasswordVisible ? "text" : "password"}
+                      value={signupData.password}
+                      onChange={(e) => handleInputChange(e, "signup")}
+                    />
+                    <TogglePasswordVisibility
+                      isVisible={isSignupPasswordVisible}
+                      onToggle={() => togglePasswordVisibility("signup")}
+                    />
+                  </div>
                 </div>
               </CardContent>
               <CardFooter className="flex justify-center">
