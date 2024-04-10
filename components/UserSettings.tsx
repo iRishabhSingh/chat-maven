@@ -14,26 +14,26 @@ import { ModeToggle } from "./mode-toggle";
 
 const UserSettings = () => {
   const { data: session } = useSession();
+  const isLoggedIn = session && session.user;
 
   return (
-    <div className="absolute bottom-2 mx-3">
+    <div className="absolute bottom-4 mx-3">
       <DropdownMenu>
-        <DropdownMenuTrigger className="w-[236px]">
-          <Button variant="outline" className="w-full h-12">
-            {session ? session.user?.name : "Create Account"}
-          </Button>
+        <DropdownMenuTrigger className="w-[236px] h-12 border rounded-md border-[#e4e4e7] dark:border-[#27272B] hover:bg-[#0000000f] dark:hover:bg-[#292524]">
+          {isLoggedIn ? session.user?.name : "Create Account"}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-[236px]">
           <DropdownMenuLabel className="text-[#808080] text-center font-normal">
-            {session ? session.user?.email : "mail@example.com"}
+            {isLoggedIn ? session.user?.email : "You are not signed in!"}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="flex items-center justify-evenly gap-4">
             <span>Theme</span>
             <ModeToggle />
           </DropdownMenuLabel>
+          <DropdownMenuSeparator />
           <DropdownMenuLabel>
-            {session ? (
+            {isLoggedIn ? (
               <Logout />
             ) : (
               <Button variant="outline" className="w-full h-12">
