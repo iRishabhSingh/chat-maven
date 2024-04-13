@@ -15,8 +15,48 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: false,
+      required: true,
     },
+    settings: [
+      {
+        darkMode: {
+          type: Boolean,
+          required: true,
+          default: true,
+        },
+      },
+    ],
+    chats: [
+      {
+        chatId: {
+          type: Schema.Types.ObjectId,
+          ref: "Chat",
+          required: true,
+        },
+        chatName: {
+          type: String,
+          required: true,
+        },
+        dateCreated: {
+          type: Date,
+          required: true,
+        },
+        dateEdited: {
+          type: Date,
+          required: true,
+        },
+        archived: {
+          type: Boolean,
+          required: true,
+          default: false,
+        },
+        sharable: {
+          type: Boolean,
+          required: true,
+          default: false,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
