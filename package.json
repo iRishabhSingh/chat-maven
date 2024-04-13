@@ -21,6 +21,8 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "endent": "^2.1.0",
+    "eventsource-parser": "^1.1.2",
     "lucide": "^0.366.0",
     "lucide-react": "^0.366.0",
     "mongoose": "^8.3.1",
