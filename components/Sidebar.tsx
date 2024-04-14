@@ -1,8 +1,10 @@
 import React from "react";
-import UserSettings from "./UserSettings";
-import { Button } from "./ui/button";
-import { PenLine } from "lucide-react";
 import Link from "next/link";
+import { PenLine } from "lucide-react";
+
+import Chats from "./Chats";
+import { Button } from "./ui/button";
+import UserSettings from "./UserSettings";
 
 const Sidebar: React.FC<{ className?: string }> = ({ className }) => {
   return (
@@ -18,7 +20,7 @@ const Sidebar: React.FC<{ className?: string }> = ({ className }) => {
             </Link>
           </Button>
           <nav className="flex flex-col w-[260px] h-[80vh] flex-1 items-center p-3 overflow-y-scroll">
-            <p>Sidebar</p>
+            <Chats />
           </nav>
           <UserSettings />
         </div>
