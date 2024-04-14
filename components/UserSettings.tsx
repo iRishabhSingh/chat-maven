@@ -36,7 +36,7 @@ const UserSettings = () => {
             {isLoggedIn ? (
               <Logout />
             ) : (
-              <Button variant="outline" className="w-full h-12">
+              <Button asChild variant="outline" className="w-full h-12">
                 <Link href="/auth">Login or Signup</Link>
               </Button>
             )}

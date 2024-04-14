@@ -13,7 +13,11 @@ const Sidebar: React.FC<{ className?: string }> = ({ className }) => {
     >
       <div className="h-full w-[260px]">
         <div className="flex flex-col items-start justify-center h-full relative">
-          <Button variant="ghost" className="m-4 w-[200px] md:w-[236px]">
+          <Button
+            asChild
+            variant="ghost"
+            className="m-4 w-[200px] md:w-[236px]"
+          >
             <Link href="/" className="w-full flex items-center justify-between">
               New chat
               <PenLine width={15} height={15} />
