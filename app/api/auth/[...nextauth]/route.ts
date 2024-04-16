@@ -6,7 +6,7 @@ import connect from "@/utils/database";
 import User from "@/models/User";
 
 // Define authentication options
-export const authOptions: AuthOptions = {
+const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       id: "credentials",

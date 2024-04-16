@@ -2,10 +2,9 @@ import React from "react";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 const getUser = async () => {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   console.log(session);
   try {
     const response = await fetch(`http://localhost:3000/api/`, {
